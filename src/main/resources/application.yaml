@@ -1,3 +1,7 @@
 spring:
   application:
     name: desafio-tecnico-simplify-backend-junior
+  profiles:
+    active: test
+  jpa:
+    open-in-view: false
