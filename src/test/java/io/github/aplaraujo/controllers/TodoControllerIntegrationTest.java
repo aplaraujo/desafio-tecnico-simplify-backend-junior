@@ -18,6 +18,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(properties = {
@@ -37,11 +38,14 @@ public class TodoControllerIntegrationTest {
     private ObjectMapper objectMapper;
 
     private String existentEmail, existentPassword, token;
+    private Long existentTodoId, nonExistentTodoId;
 
     @BeforeEach
     void setUp() throws Exception {
         existentEmail = "carolinenairdacosta@outllok.com";
         existentPassword = "qo7w7BN7wX";
+        existentTodoId = 1L;
+        nonExistentTodoId = 100L;
 
         ResultActions result = this.mockMvc.perform(post("/auth/token").with(httpBasic(existentEmail, existentPassword)));
         MvcResult mvcResult = result.andDo(print()).andReturn();
@@ -61,4 +65,35 @@ public class TodoControllerIntegrationTest {
         ResultActions result = mockMvc.perform(get("/todos").accept(MediaType.APPLICATION_JSON));
         result.andExpect(status().isUnauthorized());
     }
+
+    @Test
+    public void findTodoByIdShouldReturn200WhenUserIsLogged() throws Exception {
+        ResultActions result = mockMvc.perform(get("/todos/" + existentTodoId).header("Authorization", this.token).accept(MediaType.APPLICATION_JSON));
+        result.andExpect(status().isOk());
+        result.andExpect(jsonPath("$.id").value(existentTodoId));
+        result.andExpect(jsonPath("$.name").value("Lavar a louça"));
+        result.andExpect(jsonPath("$.description").value("Lorem ipsum dolor sit amet"));
+        result.andExpect(jsonPath("$.done").value(true));
+        result.andExpect(jsonPath("$.priority").value("BAIXA"));
+    }
+
+    @Test
+    public void findTodoByIdShouldReturn401WhenUserIsNotLogged() throws Exception {
+        ResultActions result = mockMvc.perform(get("/todos/" + existentTodoId).accept(MediaType.APPLICATION_JSON));
+        result.andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    public void findTodoByIdShouldReturn403WhenTaskDoesNotBelongToUser() throws Exception {
+        Long todoId = 6L;
+        ResultActions result = mockMvc.perform(get("/todos/" + todoId).accept(MediaType.APPLICATION_JSON));
+        result.andExpect(status().isForbidden());
+    }
+
+    @Test
+    public void findTodoByIdShouldReturn404WhenUserIsLoggedAndIdDoesNotExist() throws Exception {
+        ResultActions result = mockMvc.perform(get("/todos/" + nonExistentTodoId).header("Authorization", this.token).accept(MediaType.APPLICATION_JSON));
+        result.andExpect(status().isNotFound());
+    }
+
 }
