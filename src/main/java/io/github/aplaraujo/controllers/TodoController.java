@@ -5,6 +5,7 @@ import io.github.aplaraujo.entities.Todo;
 import io.github.aplaraujo.mappers.TodoMapper;
 import io.github.aplaraujo.security.UserDetailsImpl;
 import io.github.aplaraujo.services.TodoService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -33,12 +34,13 @@ public class TodoController implements GenericController{
     public ResponseEntity<TodoDTO> findTodoById(@PathVariable("id") String id, @AuthenticationPrincipal UserDetailsImpl userDetails) {
         Long userId = userDetails.getId();
         var todoId = Long.parseLong(id);
-        return todoService.getTodoByIdAndUser(todoId, userId).map(todo -> ResponseEntity.ok(todoMapper.toDTO(todo))).orElseGet(() -> ResponseEntity.notFound().build());
+        Todo todo = todoService.getTodoByIdAndUser(todoId, userId);
+        return ResponseEntity.ok(todoMapper.toDTO(todo));
     }
 
     @PreAuthorize("hasRole('ROLE_USER')")
     @PostMapping
-    public ResponseEntity<Void> insertTodo(@RequestBody TodoDTO dto, @AuthenticationPrincipal UserDetailsImpl userDetails) {
+    public ResponseEntity<Void> insertTodo(@RequestBody @Valid TodoDTO dto, @AuthenticationPrincipal UserDetailsImpl userDetails) {
         todoService.insert(dto);
         var url = generateHeaderLocation(dto.id());
         return ResponseEntity.created(url).build();
@@ -48,30 +50,20 @@ public class TodoController implements GenericController{
     @PutMapping("/{id}")
     public ResponseEntity<Object> update(
             @PathVariable("id") String id,
-            @RequestBody TodoDTO dto,
+            @Valid @RequestBody TodoDTO dto,
             @AuthenticationPrincipal UserDetailsImpl userDetails) {
 
         var todoId = Long.parseLong(id);
         Long userId = userDetails.getId();
-        return todoService.getTodoByIdAndUser(todoId, userId).map(todo -> {
-            Todo entity = todoMapper.toEntity(dto);
-            todo.setName(entity.getName());
-            todo.setDescription(entity.getDescription());
-            todo.setDone(entity.getDone());
-            todo.setPriority(entity.getPriority());
-            todoService.update(todo);
-            return ResponseEntity.noContent().build();
-        }).orElseGet(() -> ResponseEntity.notFound().build());
+        Todo updated = todoService.updateTodo(todoId, userId, dto);
+        return ResponseEntity.ok(todoMapper.toDTO(updated));
     }
 
-    @PreAuthorize("hasRole('ROLE_USER')")
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Object> delete(@PathVariable("id") String id, @AuthenticationPrincipal UserDetailsImpl userDetails) {
-        var todoId = Long.parseLong(id);
-        Long userId = userDetails.getId();
-        return todoService.getTodoByIdAndUser(todoId, userId).map(todo -> {
-            todoService.delete(todoId);
-            return ResponseEntity.noContent().build();
-        }).orElseGet(() -> ResponseEntity.notFound().build());
-    }
+//    @PreAuthorize("hasRole('ROLE_USER')")
+//    @DeleteMapping("/{id}")
+//    public ResponseEntity<Object> delete(@PathVariable("id") String id, @AuthenticationPrincipal UserDetailsImpl userDetails) {
+//        var todoId = Long.parseLong(id);
+//        Long userId = userDetails.getId();
+//        return todoService.getTodoByIdAndUser(todoId, userId).orElseGet(() -> ResponseEntity.notFound().build());
+//    }
 }

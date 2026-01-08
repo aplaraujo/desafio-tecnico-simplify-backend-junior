@@ -6,6 +6,7 @@ import io.github.aplaraujo.entities.User;
 import io.github.aplaraujo.mappers.TodoMapper;
 import io.github.aplaraujo.repositories.TodoRepository;
 import io.github.aplaraujo.repositories.UserRepository;
+import io.github.aplaraujo.services.exceptions.OperationNotAllowedException;
 import io.github.aplaraujo.services.exceptions.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -35,24 +36,39 @@ public class TodoService {
         return todoRepository.findAll();
     }
 
-    public Optional<Todo> getTodoByIdAndUser(Long id, Long userId) {
+    public Todo getTodoByIdAndUser(Long id, Long userId) {
         if (id == null || userId == null) {
-            throw new ResourceNotFoundException("Todo not found or does not belong to user");
+            throw new IllegalArgumentException("Todo ID and User ID must not be null");
         }
-        return todoRepository.findByIdAndUserId(id, userId);
+        return todoRepository.findByIdAndUserId(id, userId)
+                .orElseThrow(() -> {
+                    if (todoRepository.existsById(id)) {
+                        throw new OperationNotAllowedException("You don't have permission to access this todo");
+                    } else {
+                        throw new ResourceNotFoundException("Todo not found with id: " + id);
+                    }
+                });
     }
 
-    public void update(Todo todo) {
-        if (todo.getId() == null) {
-            throw new IllegalArgumentException("Todo not found!");
-        }
-        todoRepository.save(todo);
+    public Todo updateTodo(Long id, Long userId, TodoDTO dto) {
+        Todo todo = getTodoByIdAndUser(id, userId);
+        todoMapper.updateEntityFromDTO(todo, dto);
+        return todoRepository.save(todo);
     }
 
-    public void delete(Long id) {
-        if (!todoRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Todo not found with id " + id);
+    public Todo patchTodo(Long id, Long userId, TodoDTO dto) {
+        Todo todo = getTodoByIdAndUser(id, userId);
+        todoMapper.patchEntityFromDTO(todo, dto);
+        return todoRepository.save(todo);
+    }
+
+    public void delete(Long id, Long userId) {
+        Todo todo = getTodoByIdAndUser(id, userId);
+        if (todoRepository.existsById(id)) {
+            throw new OperationNotAllowedException("You don't have permission to access this todo");
+        } else {
+            throw new ResourceNotFoundException("Todo not found with id: " + id);
         }
-        todoRepository.deleteById(id);
+
     }
 }

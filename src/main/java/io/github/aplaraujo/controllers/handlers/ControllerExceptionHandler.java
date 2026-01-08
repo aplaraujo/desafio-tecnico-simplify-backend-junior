@@ -1,42 +1,42 @@
 package io.github.aplaraujo.controllers.handlers;
 
-import io.github.aplaraujo.services.exceptions.ResourceNotFoundException;
-import jakarta.servlet.http.HttpServletRequest;
+import io.github.aplaraujo.services.exceptions.OperationNotAllowedException;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.nio.file.AccessDeniedException;
-import java.time.Instant;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class ControllerExceptionHandler {
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<CustomError> resourceNotFound(ResourceNotFoundException e, HttpServletRequest request) {
-        HttpStatus status = HttpStatus.NOT_FOUND;
-        CustomError err = new CustomError(Instant.now(), status.value(), e.getMessage(), request.getRequestURI());
-        return ResponseEntity.status(status).body(err);
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
+    public ValidationError handleMethodargumentNotValidException(MethodArgumentNotValidException e) {
+        List<FieldError> fieldErrors = e.getFieldErrors();
+        List<FieldMessage> list = fieldErrors.stream().map(fe -> new FieldMessage(fe.getField(), fe.getDefaultMessage())).toList();
+        return new ValidationError(HttpStatus.UNPROCESSABLE_ENTITY.value(), "Invalid data", list);
+    }
+
+    @ExceptionHandler(OperationNotAllowedException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ValidationError handleOperationNotAllowedException(OperationNotAllowedException e) {
+        return ValidationError.standardResponse(e.getMessage());
     }
 
     @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<CustomError> accessDenied(AccessDeniedException e, HttpServletRequest request) {
-        HttpStatus status = HttpStatus.FORBIDDEN;
-        CustomError err = new CustomError(Instant.now(), status.value(), e.getMessage(), request.getRequestURI());
-        return ResponseEntity.status(status).body(err);
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ValidationError handleAccessDeniedException(AccessDeniedException e) {
+        return new ValidationError(HttpStatus.FORBIDDEN.value(), "Denied Access", List.of());
     }
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<CustomError> methodArgumentNotValid(MethodArgumentNotValidException e, HttpServletRequest request) {
-        HttpStatus status = HttpStatus.UNPROCESSABLE_ENTITY;
-        ValidationError err = new ValidationError(Instant.now(), status.value(), "Dados inválidos", request.getRequestURI());
-
-        for(FieldError error: e.getBindingResult().getFieldErrors()) {
-            err.addError(error.getField(), error.getDefaultMessage());
-        }
-
-        return ResponseEntity.status(status).body(err);
+    @ExceptionHandler(RuntimeException.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ValidationError handleNotTreatedErrors(RuntimeException e) {
+        return new ValidationError(HttpStatus.INTERNAL_SERVER_ERROR.value(), "An unexpected error occurred. Please contact the system administration.", List.of());
     }
 }

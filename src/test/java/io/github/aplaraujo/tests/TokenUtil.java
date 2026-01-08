@@ -15,20 +15,19 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
-import org.springframework.test.web.servlet.ResultMatcher;
 
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
 
-import static org.springframework.test.web.client.match.MockRestRequestMatchers.content;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Component
 public class TokenUtil {
     @Value("${JWT_SECRET}")
-    private String jwtSecretKey;
+    private String jwtSecret;
 
     @Value("${JWT_DURATION}")
     private Long jwtDuration;
@@ -46,12 +45,6 @@ public class TokenUtil {
         return generateToken(authentication.getName());
     }
 
-    private String generateToken(String email) {
-        Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + jwtDuration);
-        return Jwts.builder().setSubject(email).setIssuedAt(now).setExpiration(expiryDate).signWith(getSignKey(), SignatureAlgorithm.HS256).compact();
-    }
-
     public String getUsernameFromToken(String token) {
         Claims claims = Jwts.parserBuilder().setSigningKey(getSignKey()).build().parseClaimsJws(token).getBody();
         return claims.getSubject();
@@ -66,20 +59,17 @@ public class TokenUtil {
         }
     }
 
-    public String obtainAccessTokenForTest(MockMvc mockMvc, String email, String password)
-            throws Exception {
-
+    public String obtainAccessTokenForTest(MockMvc mockMvc, String email, String password) throws Exception {
         String requestBody = String.format(
                 "{\"email\":\"%s\",\"password\":\"%s\"}",
                 email, password
         );
 
-        ResultActions result = mockMvc
-                .perform(post("/auth/token")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestBody))
+        ResultActions result = mockMvc.perform(post("/auth/token")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestBody))
                 .andExpect(status().isOk())
-                .andExpect((ResultMatcher) content().contentType(MediaType.APPLICATION_JSON));
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
 
         String resultString = result.andReturn().getResponse().getContentAsString();
 
@@ -87,8 +77,14 @@ public class TokenUtil {
         return jsonParser.parseMap(resultString).get("token").toString();
     }
 
+    private String generateToken(String email) {
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + jwtDuration);
+        return Jwts.builder().setSubject(email).setIssuedAt(now).setExpiration(expiryDate).signWith(getSignKey(), SignatureAlgorithm.HS256).compact();
+    }
+
     private Key getSignKey() {
-        byte[] keyBytes = jwtSecretKey.getBytes(StandardCharsets.UTF_8);
+        byte[] keyBytes = jwtSecret.getBytes(StandardCharsets.UTF_8);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 }
