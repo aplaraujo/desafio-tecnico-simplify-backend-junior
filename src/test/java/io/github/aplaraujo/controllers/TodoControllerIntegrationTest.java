@@ -1,5 +1,6 @@
 package io.github.aplaraujo.controllers;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.aplaraujo.tests.TokenUtil;
 import org.json.JSONObject;
@@ -14,6 +15,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.transaction.annotation.Transactional;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -94,6 +96,97 @@ public class TodoControllerIntegrationTest {
     public void findTodoByIdShouldReturn404WhenUserIsLoggedAndIdDoesNotExist() throws Exception {
         ResultActions result = mockMvc.perform(get("/todos/" + nonExistentTodoId).header("Authorization", this.token).accept(MediaType.APPLICATION_JSON));
         result.andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void insertTodoShouldReturn201WhenUserIsLogged() throws Exception {
+        // TodoDTO dto = new TodoDTO(4L, "Comprar leite", "Lorem ipsum dolor sit amet", true, PriorityType.MEDIA, 1L);
+//        ResultActions result = mockMvc.perform(post("/todos").header("Authorization", this.token)
+//                .content(objectMapper.writeValueAsString(dto)).contentType(MediaType.APPLICATION_JSON));
+//        result.andExpect(status().isCreated());
+    }
+
+    @Test
+    public void insertTodoShouldReturn422AndCustomMessageWhenUserIsLoggedAndNameFieldIsEmpty() throws Exception {
+//         TodoDTO dto = new TodoDTO(4L, "  ", "Lorem ipsum dolor sit amet", true, PriorityType.MEDIA, 1L);
+//        ResultActions result = mockMvc.perform(post("/todos").header("Authorization", this.token)
+//                .content(objectMapper.writeValueAsString(dto)).contentType(MediaType.APPLICATION_JSON));
+//        result.andExpect(status().isUnprocessableEntity());
+//        result.andExpect(result -> assertEquals("This field should not be empty", result.getResolvedException().getMessage()));
+    }
+
+    @Test
+    public void insertTodoShouldReturn422AndCustomMessageWhenUserIsLoggedAndDescriptionFieldIsEmpty() throws Exception {
+//         TodoDTO dto = new TodoDTO(4L, "Comprar leite", "  ", true, PriorityType.MEDIA, 1L);
+//        ResultActions result = mockMvc.perform(post("/todos").header("Authorization", this.token)
+//                .content(objectMapper.writeValueAsString(dto)).contentType(MediaType.APPLICATION_JSON));
+//        result.andExpect(status().isUnprocessableEntity());
+//        result.andExpect(result -> assertEquals("This field should not be empty", result.getResolvedException().getMessage()));
+    }
+
+    @Test
+    public void insertTodoShouldReturn422AndCustomMessageWhenUserIsLoggedAndPriorityFieldIsEmpty() throws Exception {
+//         TodoDTO dto = new TodoDTO(4L, "Comprar leite", "Lorem ipsum dolor sit amet", true, "  ", 1L);
+//        ResultActions result = mockMvc.perform(post("/todos").header("Authorization", this.token)
+//                .content(objectMapper.writeValueAsString(dto)).contentType(MediaType.APPLICATION_JSON));
+//        result.andExpect(status().isUnprocessableEntity());
+//        result.andExpect(result -> assertEquals("This field should not be empty", result.getResolvedException().getMessage()));
+    }
+
+    @Test
+    public void insertTodoShouldReturn401WhenUserIsNotLogged() throws Exception {
+//         TodoDTO dto = new TodoDTO(4L, "Comprar leite", "Lorem ipsum dolor sit amet", true, PriorityType.MEDIA, 1L);
+//        ResultActions result = mockMvc.perform(post("/todos")
+//                .content(objectMapper.writeValueAsString(dto)).contentType(MediaType.APPLICATION_JSON));
+//        result.andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    public void updateTodoShouldReturn204WhenUserIsLogged() throws Exception {
+//        Long todoId = 4L;
+//         TodoDTO dto = new TodoDTO(todoId, "Comprar leite", "Lorem ipsum dolor sit amet", true, PriorityType.MEDIA, 1L);
+//        ResultActions result = mockMvc.perform(post("/todos").header("Authorization", this.token)
+//                .content(objectMapper.writeValueAsString(dto)).contentType(MediaType.APPLICATION_JSON));
+//        result.andExpect(status().isNoContent());
+    }
+
+    @Test
+    public void updateTodoShouldReturn422AndCustomMessageWhenUserIsLoggedAndNameFieldIsEmpty() throws Exception {
+        // Long todoId = 4L;
+//         TodoDTO dto = new TodoDTO(todoId, "  ", "Lorem ipsum dolor sit amet", true, PriorityType.MEDIA, 1L);
+//        ResultActions result = mockMvc.perform(post("/todos").header("Authorization", this.token)
+//                .content(objectMapper.writeValueAsString(dto)).contentType(MediaType.APPLICATION_JSON));
+//        result.andExpect(status().isUnprocessableEntity());
+//        result.andExpect(result -> assertEquals("This field should not be empty", result.getResolvedException().getMessage()));
+    }
+
+    @Test
+    public void updateTodoShouldReturn422AndCustomMessageWhenUserIsLoggedAndDescriptionFieldIsEmpty() throws Exception {
+        // Long todoId = 4L;
+//         TodoDTO dto = new TodoDTO(todoId, "Comprar leite", "  ", true, PriorityType.MEDIA, 1L);
+//        ResultActions result = mockMvc.perform(post("/todos").header("Authorization", this.token)
+//                .content(objectMapper.writeValueAsString(dto)).contentType(MediaType.APPLICATION_JSON));
+//        result.andExpect(status().isUnprocessableEntity());
+//        result.andExpect(result -> assertEquals("This field should not be empty", result.getResolvedException().getMessage()));
+    }
+
+    @Test
+    public void updateTodoShouldReturn422AndCustomMessageWhenUserIsLoggedAndPriorityFieldIsEmpty() throws Exception {
+        // Long todoId = 4L;
+//         TodoDTO dto = new TodoDTO(todoId, "Comprar leite", "Lorem ipsum dolor sit amet", true, "  ", 1L);
+//        ResultActions result = mockMvc.perform(post("/todos").header("Authorization", this.token)
+//                .content(objectMapper.writeValueAsString(dto)).contentType(MediaType.APPLICATION_JSON));
+//        result.andExpect(status().isUnprocessableEntity());
+//        result.andExpect(result -> assertEquals("This field should not be empty", result.getResolvedException().getMessage()));
+    }
+
+    @Test
+    public void updateTodoShouldReturn401WhenUserIsNotLogged() throws Exception {
+        // Long todoId = 4L;
+//         TodoDTO dto = new TodoDTO(todoId, "Comprar leite", "Lorem ipsum dolor sit amet", true, PriorityType.MEDIA, 1L);
+//        ResultActions result = mockMvc.perform(post("/todos")
+//                .content(objectMapper.writeValueAsString(dto)).contentType(MediaType.APPLICATION_JSON));
+//        result.andExpect(status().isUnauthorized());
     }
 
 }
