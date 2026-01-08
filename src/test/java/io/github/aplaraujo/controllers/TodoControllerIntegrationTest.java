@@ -17,8 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -187,6 +186,25 @@ public class TodoControllerIntegrationTest {
 //        ResultActions result = mockMvc.perform(post("/todos")
 //                .content(objectMapper.writeValueAsString(dto)).contentType(MediaType.APPLICATION_JSON));
 //        result.andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    public void deleteTodoShouldReturn204WhenUserIsLoggedAndIdExists() throws Exception {
+        Long todoId = 4L;
+        ResultActions result = mockMvc.perform(delete("/todos/" + todoId).header("Authorization", this.token).contentType(MediaType.APPLICATION_JSON));
+        result.andExpect(status().isNoContent());
+    }
+
+    @Test
+    public void deleteTodoShouldReturn404WhenUserIsLoggedAndIdDoesNotExist() throws Exception {
+        ResultActions result = mockMvc.perform(delete("/todos/" + nonExistentTodoId).header("Authorization", this.token).contentType(MediaType.APPLICATION_JSON));
+        result.andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void deleteTodoShouldReturn401WhenUserIsNotLogged() throws Exception {
+        ResultActions result = mockMvc.perform(delete("/todos/" + nonExistentTodoId).contentType(MediaType.APPLICATION_JSON));
+        result.andExpect(status().isUnauthorized());
     }
 
 }
