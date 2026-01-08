@@ -64,11 +64,6 @@ public class TodoService {
 
     public void delete(Long id, Long userId) {
         Todo todo = getTodoByIdAndUser(id, userId);
-        if (todoRepository.existsById(id)) {
-            throw new OperationNotAllowedException("You don't have permission to access this todo");
-        } else {
-            throw new ResourceNotFoundException("Todo not found with id: " + id);
-        }
-
+        todoRepository.delete(todo);
     }
 }

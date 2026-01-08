@@ -5,8 +5,11 @@ import io.github.aplaraujo.entities.Todo;
 import io.github.aplaraujo.mappers.TodoMapper;
 import io.github.aplaraujo.security.UserDetailsImpl;
 import io.github.aplaraujo.services.TodoService;
+import io.github.aplaraujo.services.exceptions.OperationNotAllowedException;
+import io.github.aplaraujo.services.exceptions.ResourceNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -59,11 +62,18 @@ public class TodoController implements GenericController{
         return ResponseEntity.ok(todoMapper.toDTO(updated));
     }
 
-//    @PreAuthorize("hasRole('ROLE_USER')")
-//    @DeleteMapping("/{id}")
-//    public ResponseEntity<Object> delete(@PathVariable("id") String id, @AuthenticationPrincipal UserDetailsImpl userDetails) {
-//        var todoId = Long.parseLong(id);
-//        Long userId = userDetails.getId();
-//        return todoService.getTodoByIdAndUser(todoId, userId).orElseGet(() -> ResponseEntity.notFound().build());
-//    }
+    @PreAuthorize("hasRole('ROLE_USER')")
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Object> delete(@PathVariable("id") String id, @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        try {
+            var todoId = Long.parseLong(id);
+            Long userId = userDetails.getId();
+            todoService.delete(todoId, userId);
+            return ResponseEntity.noContent().build();
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        } catch (OperationNotAllowedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+    }
 }

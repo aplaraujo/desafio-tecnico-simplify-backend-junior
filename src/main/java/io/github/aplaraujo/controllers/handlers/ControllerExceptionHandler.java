@@ -1,6 +1,7 @@
 package io.github.aplaraujo.controllers.handlers;
 
 import io.github.aplaraujo.services.exceptions.OperationNotAllowedException;
+import io.github.aplaraujo.services.exceptions.ResourceNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
@@ -22,8 +23,14 @@ public class ControllerExceptionHandler {
         return new ValidationError(HttpStatus.UNPROCESSABLE_ENTITY.value(), "Invalid data", list);
     }
 
+    @ExceptionHandler(ResourceNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ValidationError handleResourceNotFoundException(ResourceNotFoundException e) {
+        return new ValidationError(HttpStatus.NOT_FOUND.value(), "Resource not found", List.of());
+    }
+
     @ExceptionHandler(OperationNotAllowedException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
     public ValidationError handleOperationNotAllowedException(OperationNotAllowedException e) {
         return ValidationError.standardResponse(e.getMessage());
     }
