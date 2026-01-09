@@ -15,7 +15,7 @@ excluir tarefas que pertencem a ele.
 - Cada tarefa pertence a um único usuário, enquanto que um usuário pode ter uma ou mais tarefas.
 - Um usuário tem apenas um único perfil no sistema (***user***)
 
-![uml](\assets\todo_uml.png)
+![uml](https://github.com/aplaraujo/desafio-tecnico-simplify-backend-junior/blob/main/assets/todo_uml.png)
 
 ## Casos de Uso
 
